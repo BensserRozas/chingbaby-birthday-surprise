@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>A Surprise Journey for Chingbaby</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <div id="game-container">
+        
+        <!-- 讀取畫面 -->
+        <div id="loading-screen" class="scene active">
+            <div class="content">
+                <h1>A Special Gift for Chingbaby <span class="birthday-date">🎂 08/16</span></h1>
+                <p>Happy Birthday</p>
+                <button id="start-button" onclick="testClick()" style="z-index: 9999; position: relative;">點我開始</button>
+                <button id="sound-toggle" style="position: absolute; top: 20px; right: 20px; padding: 8px 12px; background: rgba(255, 255, 255, 0.8); border: none; border-radius: 20px; cursor: pointer; font-size: 14px; z-index: 1000;">🔊 音效</button>
+                <button id="music-toggle" style="position: absolute; top: 60px; right: 20px; padding: 8px 12px; background: rgba(255, 255, 255, 0.8); border: none; border-radius: 20px; cursor: pointer; font-size: 14px; z-index: 1000;">🎵 音樂</button>
+                
+                <!-- 視窗大小提示 -->
+                <div id="window-size-hint" style="position: absolute; bottom: 20px; right: 20px; font-size: 12px; color: rgba(255, 255, 255, 0.7); text-align: right; z-index: 1000; font-style: italic;">將視窗拉到跟畫面一樣大</div>
+            </div>
+        </div>
+
+        <!-- 場景 1: 便利商店 -->
+        <div id="scene-1" class="scene">
+            <div id="task-1" class="task-prompt">幫 Chingbaby 找回 3 個「快樂泉源」，讓她休息一下吧！</div>
+            <img id="rabbit-worker" src="{{ url_for('static', filename='images/rabbit_work_1755282908505.png') }}" alt="工作的兔子">
+            <div id="rabbit-complaint">呼...這些客人腦子不用可以捐了, 奧客再繼續過來, 我遲早被送到隔壁榮總。</div>
+            
+            <img id="object-1" class="happy-object" src="{{ url_for('static', filename='images/object_1_1755282908509.png') }}" data-id="1" alt="快樂物件1">
+            <img id="object-2" class="happy-object" src="{{ url_for('static', filename='images/object_2_1755282908509.png') }}" data-id="2" alt="快樂物件2">
+            <img id="object-3" class="happy-object" src="{{ url_for('static', filename='images/object_3_1755282908509.png') }}" data-id="3" alt="快樂物件3">
+            
+            <!-- 寵物表情變化系統 -->
+            <img id="pet-expression" src="{{ url_for('static', filename='images/寵物_吐槽表情_1755282908507.png') }}" alt="寵物表情" style="position: absolute; top: 15%; right: 10%; width: 15%; z-index: 20;">
+            
+            <!-- 正確顯示貓福珊迪圖片，移除多餘方塊 -->
+            <img id="mofusand-cat" src="{{ url_for('static', filename='images/貓福珊迪_2_1755282908507.png') }}" alt="貓福珊迪">
+            <div id="mofusand-hint">人類真辛苦，給你一個罐罐當作獎勵吧，喵～</div>
+        </div>
+
+        <!-- 場景 2: 驚喜登場 -->
+        <div id="scene-2" class="scene">
+            <img id="rabbit-surprised" src="{{ url_for('static', filename='images/rabbit_cute_1755282908504.png') }}" alt="驚喜的兔子">
+            <img id="panda-hero" src="{{ url_for('static', filename='images/panda_1755282908509.png') }}" alt="熊貓登場">
+            <div id="panda-hint">我帶禮物過來囉</div>
+            <!-- 正確顯示禮物袋圖片 -->
+            <img id="gift-bag" src="{{ url_for('static', filename='images/物件_禮物袋_1755282908506.png') }}" alt="禮物袋">
+            <div id="gift-bag-hint">打開禮物！</div>
+            
+            <!-- 小蛋糕驚喜 -->
+            <img id="hidden-cake" src="{{ url_for('static', filename='images/物件_小蛋糕_2_1755282908506.png') }}" alt="小蛋糕" style="position: absolute; top: 15%; right: 6%; width: 15%; z-index: 30; opacity: 0; transition: all 0.5s ease; transform: scale(0.8);">
+        </div>
+
+        <!-- 場景 3: 回憶旅程 -->
+        <div id="scene-3" class="scene">
+            <div id="memory-green-island" class="memory-page active">
+                <div class="memory-caption">那年夏天</div>
+            </div>
+            <div id="memory-img1" class="memory-page">
+                <div class="memory-caption">凍未條</div>
+            </div>
+            <div id="memory-img2" class="memory-page">
+                <video autoplay muted loop playsinline style="width: 100%; height: 100%; object-fit: cover;">
+                    <source src="{{ url_for('static', filename='images/IMG_2.mp4') }}" type="video/mp4">
+                </video>
+                <div class="memory-caption">拚咖波</div>
+            </div>
+            <div id="memory-img3" class="memory-page">
+                <div class="memory-caption">愛心泡泡紙</div>
+            </div>
+            <div id="memory-img4" class="memory-page">
+                <div class="memory-caption">You & Me</div>
+            </div>
+            <div id="memory-img5" class="memory-page">
+                <div class="memory-caption">上</div>
+            </div>
+            <div id="memory-img6" class="memory-page">
+                <div class="memory-caption">下</div>
+            </div>
+            <div id="memory-yilan" class="memory-page">
+                <div class="memory-caption">宜蘭之旅</div>
+            </div>
+            <div id="memory-img7" class="memory-page">
+                <div class="memory-caption">帥氣的我</div>
+            </div>
+            <div id="prev-memory" class="nav-arrow">⟨</div>
+            <div id="next-memory" class="nav-arrow">⟩</div>
+        </div>
+
+        <!-- 場景 4: 生日慶典 -->
+        <div id="scene-4" class="scene">
+            <img id="final-characters" src="{{ url_for('static', filename='images/photo_2_1755282908504.png') }}" alt="最終合照">
+            <img id="birthday-cake" src="{{ url_for('static', filename='images/cake_1755282908508.png') }}" alt="生日蛋糕">
+            <div id="cake-hint">點我可以放煙火，或是吃蛋糕囉！</div>
+            <div id="final-message" class="birthday-message" style="display: none;">
+                <p id="msg-1"></p>
+                <p id="msg-2"></p>
+                <p id="msg-3"></p>
+                <p id="msg-4"></p>
+                <p id="msg-5"></p>
+                <button id="final-button">生日快樂！</button>
+            </div>
+        </div>
+
+        <!-- 對話框 -->
+        <div id="dialogue-box" class="dialogue-box"></div>
+
+        <!-- 禮物彈窗 -->
+        <div id="gift-modal" class="modal">
+            <div class="modal-content">
+                <img id="gift-photo" src="{{ url_for('static', filename='images/photo_1_1755282908503.png') }}" alt="驚喜禮物">
+            </div>
+        </div>
+
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

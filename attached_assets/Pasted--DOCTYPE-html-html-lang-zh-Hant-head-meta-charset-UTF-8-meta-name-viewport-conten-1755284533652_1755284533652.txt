@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>A Surprise Journey for Chingbaby</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
+body, html {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    display: flex; justify-content: center; align-items: center;
+    background-color: #333; font-family: 'Noto Sans TC', sans-serif;
+    overflow: hidden;
+}
+#game-container {
+    position: relative;
+    width: 100%; max-width: 1000px;
+    aspect-ratio: 1000 / 600;
+    background-color: #fff;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    overflow: hidden;
+}
+.scene {
+    position: absolute; width: 100%; height: 100%; top: 0; left: 0;
+    opacity: 0; visibility: hidden; transition: opacity 1s ease-in-out;
+    background-size: cover; background-position: center;
+    display: flex; justify-content: center; align-items: center;
+}
+.scene.active { opacity: 1; visibility: visible; }
+/* Loading screen */
+#loading-screen .content { text-align: center; color: #4a4a4a; }
+#loading-screen h1 { font-size: 2.8vw; }
+#start-button {
+    padding: 1.2vh 2.5vw; font-size: 1.8vw; cursor: pointer;
+    background-color: #ff8fab; color: white; border: none; border-radius: 5vh;
+    font-weight: bold; transition: background-color 0.3s;
+}
+#start-button:hover { background-color: #ff6b81; }
+/* Objects & UI */
+.happy-object { position: absolute; cursor: pointer; transition: transform 0.3s, opacity 0.5s; }
+.happy-object:hover { transform: scale(1.2); }
+.dialogue-box {
+    position: absolute; bottom: 3.3%; left: 50%; transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.7); color: white; padding: 2.5% 4%;
+    border-radius: 2.5vh; font-size: 1.8vw; text-align: center;
+    opacity: 0; visibility: hidden; transition: opacity 0.5s, visibility 0.5s;
+    max-width: 80%; z-index: 100;
+}
+.dialogue-box.visible { opacity: 1; visibility: visible; }
+.task-prompt {
+    position: absolute; top: 3.3%; left: 50%; transform: translateX(-50%);
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 1.6% 3.3%; border-radius: 3.3vh; font-weight: bold; color: #333;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1); font-size: 1.6vw;
+}
+.modal {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.6);
+    display: flex; justify-content: center; align-items: center;
+    opacity: 0; visibility: hidden; transition: opacity 0.5s; z-index: 200;
+}
+.modal.visible { opacity: 1; visibility: visible; }
+.modal-content { position: relative; text-align: center; width: 70%; }
+#gift-photo { width: 100%; border-radius: 2.5vh; box-shadow: 0 0 30px rgba(255,255,255,0.5); }
+#gift-dialogue {
+    position: absolute; bottom: -10vh; left: 50%; transform: translateX(-50%);
+    color: white; font-size: 2.2vw; font-weight: bold; width: 100%;
+    text-shadow: 0 0 5px black;
+}
+/* Birthday scene */
+#final-characters { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); height: 58.3%; }
+#birthday-cake {
+    position: absolute; bottom: 13.3%; left: 50%; transform: translateX(-50%);
+    width: 15%; cursor: pointer; transition: transform 0.3s;
+}
+#birthday-cake:hover { transform: translateX(-50%) scale(1.1); }
+.birthday-message { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; width: 80%; }
+.birthday-message p {
+    font-size: 2.8vw; color: white; font-weight: bold;
+    text-shadow: 0 0 10px rgba(0,0,0,0.8);
+    opacity: 0; transform: translateY(20px);
+    transition: opacity 1s, transform 1s;
+}
+#final-button {
+    padding: 1.2vh 2.5vw; font-size: 1.8vw; cursor: pointer;
+    background-color: #ff8fab; color: white; border: none; border-radius: 5vh;
+    font-weight: bold; margin-top: 3.3%; opacity: 0;
+    transition: opacity 1s, background-color 0.3s;
+}
+.firework {
+    position: absolute; width: 0.4%; height: 0.4%; background: #fff;
+    border-radius: 50%; opacity: 1; animation: burst 1s ease-out forwards;
+}
+@keyframes burst { to { transform: scale(25); opacity: 0; } }
+</style>
+</head>
+<body>
+<div id="game-container">
+    <!-- Loading -->
+    <div id="loading-screen" class="scene active">
+        <div class="content">
+            <h1>A Surprise Journey for Chingbaby</h1>
+            <p>一個驚喜正在路上...</p>
+            <button id="start-button">點我開始</button>
+        </div>
+    </div>
+    <!-- Scene 1 -->
+    <div id="scene-1" class="scene">
+        <div id="task-1" class="task-prompt">幫兔兔找回 3 個「快樂物件」</div>
+        <img id="rabbit-worker" src="https://via.placeholder.com/150" alt="工作的兔子"><!-- 原圖: rabbit_work.png -->
+        <img id="object-1" class="happy-object" src="https://via.placeholder.com/50" data-id="1" alt="快樂物件1"><!-- 原圖: object_1.png -->
+        <img id="object-2" class="happy-object" src="https://via.placeholder.com/50" data-id="2" alt="快樂物件2"><!-- 原圖: object_2.png -->
+        <img id="object-3" class="happy-object" src="https://via.placeholder.com/50" data-id="3" alt="快樂物件3"><!-- 原圖: object_3.png -->
+        <div id="mofusand-egg" style="width:50px;height:50px;background:#ff0;border-radius:50%;"></div><!-- 原圖: mofusand-egg -->
+    </div>
+    <!-- Scene 2 -->
+    <div id="scene-2" class="scene">
+        <img id="rabbit-surprised" src="https://via.placeholder.com/150" alt="驚喜的兔子"><!-- 原圖: rabbit_cute.png -->
+        <img id="panda-hero" src="https://via.placeholder.com/150" alt="小熊貓登場"><!-- 原圖: panda.png -->
+    </div>
+    <!-- Scene 3 -->
+    <div id="scene-3" class="scene">
+        <div id="memory-green-island" class="memory-page active" style="background:#8f8;">
+            <div class="memory-caption">那年夏天</div><!-- 原圖: green_island.jpg -->
+        </div>
+        <div id="memory-yilan" class="memory-page" style="background:#88f;">
+            <div class="memory-caption">宜蘭之旅</div><!-- 原圖: yilan.png -->
+        </div>
+        <div id="prev-memory" class="nav-arrow">⟨</div>
+        <div id="next-memory" class="nav-arrow">⟩</div>
+    </div>
+    <!-- Scene 4 -->
+    <div id="scene-4" class="scene" style="background:#222;"><!-- 原圖: night_beach.jpg -->
+        <img id="final-characters" src="https://via.placeholder.com/200" alt="最終合照"><!-- 原圖: photo_2.png -->
+        <img id="birthday-cake" src="https://via.placeholder.com/100" alt="生日蛋糕"><!-- 原圖: cake.png -->
+        <div id="final-message" class="birthday-message" style="display:none;">
+            <p id="msg-1"></p>
+            <p id="msg-2"></p>
+            <p id="msg-3"></p>
+            <p id="msg-4"></p>
+            <button id="final-button" style="visibility:hidden;"></button>
+        </div>
+    </div>
+    <!-- UI -->
+    <div id="dialogue-box" class="dialogue-box"></div>
+    <div id="gift-modal" class="modal">
+        <div class="modal-content">
+            <img id="gift-photo" src="https://via.placeholder.com/300" alt="禮物照片"><!-- 原圖: photo_1.png -->
+            <div id="gift-dialogue"></div>
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const scenes = document.querySelectorAll('.scene');
+    let currentScene = 0;
+    const dialogueBox = document.getElementById('dialogue-box');
+    const happyObjects = document.querySelectorAll('.happy-object');
+    let foundObjects = 0;
+    const mofusandEgg = document.getElementById('mofusand-egg');
+    const pandaHero = document.getElementById('panda-hero');
+    const giftModal = document.getElementById('gift-modal');
+    const giftDialogue = document.getElementById('gift-dialogue');
+    let giftClickCount = 0;
+    const memoryPages = document.querySelectorAll('.memory-page');
+    const nextMemoryBtn = document.getElementById('next-memory');
+    const prevMemoryBtn = document.getElementById('prev-memory');
+    let currentMemory = 0;
+    const birthdayCake = document.getElementById('birthday-cake');
+
+    function showDialogue(text, duration = 4000) {
+        dialogueBox.textContent = text;
+        dialogueBox.classList.add('visible');
+        setTimeout(() => { dialogueBox.classList.remove('visible'); }, duration);
+    }
+    function switchScene(sceneIndex) {
+        scenes.forEach(scene => scene.classList.remove('active'));
+        scenes[sceneIndex].classList.add('active');
+        currentScene = sceneIndex;
+    }
+
+    document.getElementById('start-button').addEventListener('click', () => {
+        switchScene(1);
+    });
+
+    happyObjects.forEach(obj => {
+        obj.addEventListener('click', () => {
+            obj.style.opacity = '0';
+            obj.style.pointerEvents = 'none';
+            foundObjects++;
+            if (foundObjects === 3) {
+                document.getElementById('task-1').style.display = 'none';
+                setTimeout(() => {
+                    showDialogue('呼...這些客人腦子不用可以捐了...', 5000);
+                }, 500);
+                setTimeout(() => {
+                    switchScene(2);
+                    setTimeout(() => pandaHero.classList.add('arrived'), 500);
+                }, 6000);
+            }
+        });
+    });
+
+    mofusandEgg.addEventListener('click', () => {
+        showDialogue('人類真辛苦，給你一個罐罐～');
+    });
+
+    pandaHero.addEventListener('click', () => {
+        giftModal.classList.add('visible');
+        giftClickCount = 1;
+        giftDialogue.textContent = '';
+    });
+
+    giftModal.addEventListener('click', () => {
+        giftClickCount++;
+        switch (giftClickCount) {
+            case 2: giftDialogue.textContent = '欸？還想看什麼？'; break;
+            case 3: giftDialogue.textContent = '好吧，偷偷告訴你一個秘密...'; break;
+            case 4: giftDialogue.textContent = '就是...我超想你的啦！笨蛋 > <'; break;
+            case 5:
+                giftModal.classList.remove('visible');
+                setTimeout(() => switchScene(3), 500);
+                break;
+        }
+    });
+
+    function updateMemoryView() {
+        memoryPages.forEach((page, index) => {
+            page.classList.toggle('active', index === currentMemory);
+        });
+        nextMemoryBtn.textContent = currentMemory === memoryPages.length - 1 ? "✓" : "⟩";
+    }
+
+    nextMemoryBtn.addEventListener('click', () => {
+        if (currentMemory < memoryPages.length - 1) {
+            currentMemory++;
+            updateMemoryView();
+        } else {
+            switchScene(4);
+        }
+    });
+    prevMemoryBtn.addEventListener('click', () => {
+        if (currentMemory > 0) {
+            currentMemory--;
+            updateMemoryView();
+        }
+    });
+
+    birthdayCake.addEventListener('click', () => {
+        birthdayCake.style.display = 'none';
+        const finalMessage = document.getElementById('final-message');
+        finalMessage.style.display = 'block';
+        const msg1 = document.getElementById('msg-1');
+        const msg2 = document.getElementById('msg-2');
+        const msg3 = document.getElementById('msg-3');
+        const msg4 = document.getElementById('msg-4');
+        const finalButton = document.getElementById('final-button');
+
+        setTimeout(() => { msg1.textContent = '寶寶，這一年辛苦妳了。'; msg1.style.opacity = 1; msg1.style.transform = 'translateY(0)'; }, 500);
+        setTimeout(() => { msg2.textContent = '希望妳永遠健康快樂，'; msg2.style.opacity = 1; msg2.style.transform = 'translateY(0)'; }, 2000);
+        setTimeout(() => { msg3.textContent = '一步步朝著理想的自己邁進。'; msg3.style.opacity = 1; msg3.style.transform = 'translateY(0)'; }, 3500);
+        setTimeout(() => { msg4.textContent = '所有想實現的願望，我們都慢慢完成，不管是...'; msg4.style.opacity = 1; msg4.style.transform = 'translateY(0)'; }, 5000);
+        setTimeout(() => {
+            finalButton.textContent = '點我看更多';
+            finalButton.style.visibility = 'visible';
+            finalButton.style.opacity = 1;
+        }, 6500);
+    }, { once: true });
+
+    document.getElementById('final-button').addEventListener('click', (e) => {
+        e.target.style.display = 'none';
+        const msg4 = document.getElementById('msg-4');
+        msg4.style.transition = 'all 0.5s';
+        msg4.style.transform = 'scale(1.2)';
+        msg4.style.color = '#FFD700';
+        msg4.textContent = '...飛去日本看煙火！生日快樂！';
+        setInterval(() => createFirework(), 300);
+    }, { once: true });
+
+    function createFirework() {
+        const firework = document.createElement('div');
+        firework.className = 'firework';
+        const container = document.getElementById('scene-4');
+        if (container.classList.contains('active')) {
+            firework.style.left = Math.random() * 100 + '%';
+            firework.style.top = Math.random() * 80 + '%';
+            firework.style.background = `hsl(${Math.random() * 360}, 100%, 50%)`;
+            container.appendChild(firework);
+            setTimeout(() => firework.remove(), 1000);
+        }
+    }
+});
+</script>
+</body>
+</html>

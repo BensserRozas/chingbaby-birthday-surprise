@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>A Surprise Journey for Chingbaby</title>
+    <style>
+        /* --- 全局樣式 (Global Styles) --- */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
+        
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #333;
+            font-family: 'Noto Sans TC', sans-serif;
+            overflow: hidden;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            max-width: 1000px;
+            aspect-ratio: 1000 / 600;
+            background-color: #fff;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+
+        .scene {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 1s ease-in-out;
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .scene.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* --- 讀取畫面 (Loading Screen) --- */
+        #loading-screen .content {
+            text-align: center;
+            color: #4a4a4a;
+        }
+        #loading-screen h1 {
+            font-size: 2.8vw;
+        }
+        #start-button {
+            padding: 1.2vh 2.5vw;
+            font-size: 1.8vw;
+            cursor: pointer;
+            background-color: #ff8fab;
+            color: white;
+            border: none;
+            border-radius: 5vh;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        #start-button:hover {
+            background-color: #ff6b81;
+        }
+
+        /* --- 場景 1: 便利商店 (Scene 1: Convenience Store) --- */
+        #scene-1 {
+            /* 圖片路徑已換成網路連結 */
+            background-image: url('https://storage.googleapis.com/gemini-prod/images/2024/8/13/convenience_store_1.png');
+        }
+        #rabbit-worker {
+            position: absolute;
+            bottom: 0;
+            left: 38%;
+            height: 66.7%;
+            transition: opacity 0.5s;
+        }
+        .happy-object {
+            position: absolute;
+            cursor: pointer;
+            transition: transform 0.3s, opacity 0.5s;
+        }
+        .happy-object:hover {
+            transform: scale(1.2);
+        }
+        /* 物件位置可自行微調 */
+        #object-1 { bottom: 3.3%; left: 85%; width: 6%; }
+        #object-2 { bottom: 25%; left: 12%; width: 5%; }
+        #object-3 { bottom: 41.7%; left: 58%; width: 7%; transform: rotate(-15deg); }
+        #mofusand-egg { position: absolute; top: 42.5%; left: 24%; width: 8%; height: 15%; cursor: pointer; border-radius: 50%;}
+        
+        /* --- 通用 UI 元素 (Common UI Elements) --- */
+        .dialogue-box {
+            position: absolute;
+            bottom: 3.3%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 2.5% 4%;
+            border-radius: 2.5vh;
+            font-size: 1.8vw;
+            text-align: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s, visibility 0.5s;
+            max-width: 80%;
+            z-index: 100;
+        }
+        .dialogue-box.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .task-prompt {
+            position: absolute;
+            top: 3.3%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 1.6% 3.3%;
+            border-radius: 3.3vh;
+            font-weight: bold;
+            color: #333;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            font-size: 1.6vw;
+        }
+        
+        /* --- 場景 2: 驚喜 (Scene 2: Surprise) --- */
+        #scene-2 {
+            /* 圖片路徑已換成網路連結 */
+            background-image: url('https://storage.googleapis.com/gemini-prod/images/2024/8/13/convenience_store_2.png');
+        }
+        #rabbit-surprised {
+            position: absolute;
+            bottom: 0;
+            left: 38%;
+            height: 66.7%;
+        }
+        #panda-hero {
+            position: absolute;
+            bottom: -100%; /* 從下方滑入 */
+            right: 5%;
+            height: 75%;
+            cursor: pointer;
+            transition: bottom 1.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        #panda-hero.arrived {
+            bottom: -3.3%;
+        }
+        
+        /* --- 禮物彈窗 (Gift Modal) --- */
+        .modal {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0; visibility: hidden; transition: opacity 0.5s;
+            z-index: 200;
+        }
+        .modal.visible {
+            opacity: 1; visibility: visible;
+        }
+        .modal-content {
+            position: relative;
+            text-align: center;
+            width: 70%;
+        }
+        #gift-photo {
+            width: 100%;
+            border-radius: 2.5vh;
+            box-shadow: 0 0 30px rgba(255,255,255,0.5);
+            cursor: pointer; /* 讓圖片也可以點擊 */
+        }
+        #gift-dialogue {
+            position: absolute;
+            bottom: -10vh;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 2.2vw;
+            font-weight: bold;
+            width: 100%;
+            text-shadow: 0 0 5px black;
+        }
+
+        /* --- 場景 3: 回憶 (Scene 3: Memories) --- */
+        #scene-3 { background-color: #DFDCE3; }
+        .memory-page {
+            width: 100%; height: 100%;
+            background-size: cover;
+            background-position: center;
+            position: absolute;
+            opacity: 0; visibility: hidden; transition: opacity 1s;
+        }
+        .memory-page.active { opacity: 1; visibility: visible; }
+        /* 圖片路徑已換成網路連結 */
+        #memory-green-island { background-image: url('https://storage.googleapis.com/gemini-prod/images/2024/8/13/green_island.jpg'); }
+        #memory-yilan { background-image: url('https://storage.googleapis.com/gemini-prod/images/2024/8/13/yilan.jpg'); }
+        .memory-caption {
+            position: absolute;
+            bottom: 6.7%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 3.6vw;
+            font-weight: bold;
+            color: white;
+            background-color: rgba(0,0,0,0.5);
+            padding: 1.6% 5%;
+            border-radius: 2.5vh;
+        }
+        .nav-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 6vw;
+            color: rgba(255,255,255,0.8);
+            cursor: pointer;
+            z-index: 10;
+            padding: 0 2%;
+            user-select: none;
+        }
+        .nav-arrow:hover { color: white; }
+        #next-memory { right: 0; }
+        #prev-memory { left: 0; }
+
+        /* --- 場景 4: 生日慶典 (Scene 4: Birthday Celebration) --- */
+        #scene-4 { background-image: url('https://storage.googleapis.com/gemini-prod/images/2024/8/13/night_beach.jpg'); }
+        #final-characters {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 58.3%;
+        }
+        #birthday-cake {
+            position: absolute;
+            bottom: 13.3%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 15%;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        #birthday-cake:hover { transform: translateX(-50%) scale(1.1); }
+        .birthday-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            width: 80%;
+        }
+        .birthday-message p {
+            font-size: 2.8vw;
+            color: white;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(0,0,0,0.8);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 1s, transform 1s;
+        }
+        #final-button {
+            padding: 1.2vh 2.5vw;
+            font-size: 1.8vw;
+            cursor: pointer;
+            background-color: #ff8fab;
+            color: white;
+            border: none;
+            border-radius: 5vh;
+            font-weight: bold;
+            margin-top: 3.3%;
+            opacity: 0;
+            transition: opacity 1s, background-color 0.3s;
+        }
+
+        /* --- 煙火效果 (Fireworks Effect) --- */
+        #fireworks-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none; /* 讓煙火不會擋到按鈕 */
+        }
+        
+        /* 處理圖片無法載入的備用樣式 */
+        img {
+            background-color: #eee;
+            color: #888;
+            text-align: center;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        
+        <!-- 讀取畫面 -->
+        <div id="loading-screen" class="scene active">
+            <div class="content">
+                <h1>A Surprise Journey for Chingbaby</h1>
+                <p>一個驚喜正在路上...</p>
+                <button id="start-button">點我開始</button>
+            </div>
+        </div>
+
+        <!-- 場景 1: 便利商店 -->
+        <div id="scene-1" class="scene">
+            <div id="task-1" class="task-prompt">幫兔兔找回 3 個「快樂物件」，讓她休息一下吧！</div>
+            <!-- 圖片路徑已換成網路連結，並加入 onerror 備案 -->
+            <img id="rabbit-worker" src="https://storage.googleapis.com/gemini-prod/images/2024/8/13/rabbit_work.png" alt="工作的兔子" onerror="this.onerror=null;this.src='https://placehold.co/200x400/eeeeee/cccccc?text=Rabbit';">
+            <img id="object-1" class="happy-object" src="https://storage.googleapis.com/gemini-prod/images/2024/8/13/object_1.png" data-id="1" alt="快樂物件1" onerror="this.onerror=null;this.src='https://placehold.co/60x60/eeeeee/cccccc?text=Item1';">
+            <img id="object-2" class="happy-object" src="https://storage.googleapis.com/gemini-prod/images/2024/8/13/object_2.png" data-id="2" alt="快樂物件2" onerror="this.onerror=null;this.src='https://placehold.co/50x50/eeeeee/cccccc?text=Item2';">
+            <img id="object-3" class="happy-object" src="https://storage.googleapis.com/gemini-prod/images/2024/8/13/object_3.png" data-id="3" alt="快樂物件3" onerror="this.onerror=null;this.src='https://placehold.co/70x70/eeeeee/cccccc?text=Item3';">
+            <div id="mofusand-egg"></div>
+        </div>
+
+        <!-- 場景 2: 驚喜登場 -->
+        <div id="scene-2" class="scene">
+            <img id="rabbit-surprised" src="https://storage.googleapis.com/gemini-prod/images/2024/8/13/rabbit_cute.png" alt="驚喜的兔子" onerror="this.onerror=null;this.src='https://placehold.co/200x400/eeeeee/cccccc?text=Rabbit';">
+            <img id="panda-hero" src="https://storage.googleapis.com/gemini-prod/images/2024/8/13/panda.png" alt="小熊貓登場" onerror="this.onerror=null;this.src='https://placehold.co/250x450/eeeeee/cccccc?text=Panda';">
+        </div>
+
+        <!-- 場景 3: 回憶旅程 -->
+        <div id="scene-3" class="scene">
+            <div id="memory-green-island" class="memory-page active">
+                <div class="memory-caption">那年夏天</div>
+            </div>
+            <div id="memory-yilan" class="memory-page">
+                <div class="memory-caption">宜蘭之旅</div>
+            </div>
+            <div id="prev-memory" class="nav-arrow">⟨</div>
+            <div id="next-memory" class="nav-arrow">⟩</div>
+        </div>
+
+        <!-- 場景 4: 生日慶典 -->
+        <div id="scene-4" class="scene">
+            <canvas id="fireworks-canvas"></canvas>
+            <img id="final-characters" src="https://storage.googleapis.com/gemini-prod/images/2024/8/13/photo_2.png" alt="最終合照" onerror="this.onerror=null;this.src='https://placehold.co/300x350/eeeeee/cccccc?text=Couple';">
+            <img id="birthday-cake" src="https://storage.googleapis.com/gemini-prod/images/2024/8/13/cake.png" alt="生日蛋糕" onerror="this.onerror=null;this.src='https://placehold.co/150x150/eeeeee/cccccc?text=Cake';">
+            <div id="final-message" class="birthday-message" style="display: none;">
+                <p id="msg-1"></p>
+                <p id="msg-2"></p>
+                <p id="msg-3"></p>
+                <p id="msg-4"></p>
+                <button id="final-button" style="visibility: hidden;"></button>
+            </div>
+        </div>
+
+        <!-- 通用 UI -->
+        <div id="dialogue-box" class="dialogue-box"></div>
+        <div id="gift-modal" class="modal">
+            <div class="modal-content">
+                <img id="gift-photo" src="https://storage.googleapis.com/gemini-prod/images/2024/8/13/photo_1.png" alt="禮物照片" onerror="this.onerror=null;this.src='https://placehold.co/700x500/eeeeee/cccccc?text=Gift+Photo';">
+                <div id="gift-dialogue"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- 變數定義 (Variable Definitions) ---
+        const scenes = document.querySelectorAll('.scene');
+        const dialogueBox = document.getElementById('dialogue-box');
+        
+        // --- 場景 1 變數 (Scene 1 Variables) ---
+        const happyObjects = document.querySelectorAll('.happy-object');
+        let foundObjects = 0;
+        const mofusandEgg = document.getElementById('mofusand-egg');
+        
+        // --- 場景 2 變數 (Scene 2 Variables) ---
+        const pandaHero = document.getElementById('panda-hero');
+        const giftModal = document.getElementById('gift-modal');
+        const giftPhoto = document.getElementById('gift-photo');
+        const giftDialogue = document.getElementById('gift-dialogue');
+        let giftClickCount = 0;
+        
+        // --- 場景 3 變數 (Scene 3 Variables) ---
+        const memoryPages = document.querySelectorAll('.memory-page');
+        const nextMemoryBtn = document.getElementById('next-memory');
+        const prevMemoryBtn = document.getElementById('prev-memory');
+        let currentMemory = 0;
+
+        // --- 場景 4 變數 (Scene 4 Variables) ---
+        const birthdayCake = document.getElementById('birthday-cake');
+        const finalButton = document.getElementById('final-button');
+
+        // --- 核心函數 (Core Functions) ---
+        
+        /**
+         * 顯示對話框
+         * @param {string} text - 要顯示的文字
+         * @param {number} duration - 顯示的毫秒數
+         */
+        function showDialogue(text, duration = 4000) {
+            dialogueBox.textContent = text;
+            dialogueBox.classList.add('visible');
+            setTimeout(() => {
+                dialogueBox.classList.remove('visible');
+            }, duration);
+        }
+
+        /**
+         * 切換場景
+         * @param {number} sceneIndex - 要切換到的場景索引
+         */
+        function switchScene(sceneIndex) {
+            scenes.forEach(scene => scene.classList.remove('active'));
+            if (scenes[sceneIndex]) {
+                scenes[sceneIndex].classList.add('active');
+            }
+        }
+
+        // --- 初始化 & 事件監聽 (Initialization & Event Listeners) ---
+
+        // 監聽 "點我開始" 按鈕
+        document.getElementById('start-button').addEventListener('click', () => {
+            switchScene(1); // 切換到場景1 (便利商店)
+        });
+
+        // --- 場景 1 邏輯: 找東西 (Scene 1 Logic: Find Objects) ---
+        happyObjects.forEach(obj => {
+            obj.addEventListener('click', () => {
+                obj.style.opacity = '0';
+                obj.style.pointerEvents = 'none'; // 讓已經點過的物件不能再點
+                foundObjects++;
+
+                // 如果三個都找到了
+                if (foundObjects === 3) {
+                    document.getElementById('task-1').style.display = 'none';
+                    // 延遲 0.5 秒後顯示抱怨對話
+                    setTimeout(() => {
+                        showDialogue('呼...這些客人腦子不用可以捐了, 再多這些奧客過來, 我哪天就會被送到隔壁榮總。', 5000);
+                    }, 500);
+
+                    // 抱怨完後，再等 6 秒切換到下個場景
+                    setTimeout(() => {
+                        switchScene(2);
+                        // 觸發場景2的熊貓滑入動畫
+                        setTimeout(() => pandaHero.classList.add('arrived'), 500);
+                    }, 6000);
+                }
+            });
+        });
+        
+        // 監聽貓福珊迪彩蛋的點擊
+        mofusandEgg.addEventListener('click', () => {
+            showDialogue('人類真辛苦，給你一個罐罐（的圖片）當作獎勵吧，喵～');
+        });
+
+        // --- 場景 2 邏輯: 拆禮物 (Scene 2 Logic: Open Gift) ---
+        pandaHero.addEventListener('click', () => {
+            giftModal.classList.add('visible');
+            giftClickCount = 1;
+            giftDialogue.textContent = ''; // 點擊熊貓時，清空對話
+        });
+
+        // 監聽整個禮物彈窗的點擊 (包含照片)
+        giftModal.addEventListener('click', () => {
+            giftClickCount++;
+            switch (giftClickCount) {
+                case 2:
+                    giftDialogue.textContent = '欸？還想看什麼？';
+                    break;
+                case 3:
+                    giftDialogue.textContent = '好吧，偷偷告訴你一個秘密...';
+                    break;
+                case 4:
+                    giftDialogue.textContent = '就是...我超想你的啦！笨蛋 > <';
+                    break;
+                case 5:
+                    giftModal.classList.remove('visible');
+                    // 延遲 0.5 秒後進入下一個場景
+                    setTimeout(() => switchScene(3), 500);
+                    break;
+            }
+        });
+        
+        // --- 場景 3 邏輯: 回憶相簿 (Scene 3 Logic: Memory Album) ---
+        function updateMemoryView() {
+            memoryPages.forEach((page, index) => {
+                page.classList.toggle('active', index === currentMemory);
+            });
+            // 如果是最後一張，按鈕文字變成打勾
+            if (currentMemory === memoryPages.length - 1) {
+                nextMemoryBtn.textContent = "✓";
+            } else {
+                nextMemoryBtn.textContent = "⟩";
+            }
+        }
+        
+        nextMemoryBtn.addEventListener('click', () => {
+            if (currentMemory < memoryPages.length - 1) {
+                currentMemory++;
+                updateMemoryView();
+            } else {
+                // 回憶結束，進入最終場景
+                switchScene(4);
+            }
+        });
+
+        prevMemoryBtn.addEventListener('click', () => {
+            if (currentMemory > 0) {
+                currentMemory--;
+                updateMemoryView();
+            }
+        });
+
+        // --- 場景 4 邏輯: 生日快樂 (Scene 4 Logic: Happy Birthday) ---
+        birthdayCake.addEventListener('click', () => {
+            birthdayCake.style.display = 'none'; // 讓蛋糕消失
+            const finalMessage = document.getElementById('final-message');
+            finalMessage.style.display = 'block';
+
+            const msg1 = document.getElementById('msg-1');
+            const msg2 = document.getElementById('msg-2');
+            const msg3 = document.getElementById('msg-3');
+            const msg4 = document.getElementById('msg-4');
+
+            // 讓生日祝福逐行浮現
+            setTimeout(() => { msg1.textContent = '寶寶，這一年辛苦妳了。'; msg1.style.opacity = 1; msg1.style.transform = 'translateY(0)'; }, 500);
+            setTimeout(() => { msg2.textContent = '希望妳永遠健康快樂，'; msg2.style.opacity = 1; msg2.style.transform = 'translateY(0)'; }, 2000);
+            setTimeout(() => { msg3.textContent = '一步步朝著理想的自己邁進。'; msg3.style.opacity = 1; msg3.style.transform = 'translateY(0)'; }, 3500);
+            setTimeout(() => { msg4.textContent = '所有想實現的願望，我們都慢慢完成，不管是...'; msg4.style.opacity = 1; msg4.style.transform = 'translateY(0)'; }, 5000);
+            
+            // 顯示最終按鈕
+            setTimeout(() => {
+                finalButton.textContent = '點我看更多';
+                finalButton.style.visibility = 'visible';
+                finalButton.style.opacity = 1;
+            }, 6500);
+        }, { once: true }); // once: true 確保這個事件只會觸發一次
+
+        finalButton.addEventListener('click', (e) => {
+            e.target.style.display = 'none'; // 隱藏按鈕
+            const msg4 = document.getElementById('msg-4');
+            msg4.style.transition = 'all 0.5s';
+            msg4.style.transform = 'scale(1.2)';
+            msg4.style.color = '#FFD700'; // 變成金色
+            msg4.textContent = '...飛去日本看煙火！生日快樂！';
+            
+            // 觸發煙火效果
+            startFireworks();
+        }, { once: true });
+        
+        // --- 煙火特效 (Fireworks Effect) ---
+        const fireworksCanvas = document.getElementById('fireworks-canvas');
+        const ctx = fireworksCanvas.getContext('2d');
+        let fireworks = [];
+
+        function resizeCanvas() {
+            if (!fireworksCanvas) return;
+            fireworksCanvas.width = fireworksCanvas.clientWidth;
+            fireworksCanvas.height = fireworksCanvas.clientHeight;
+        }
+
+        function startFireworks() {
+            resizeCanvas();
+            // 每 0.5 秒發射一波煙火
+            setInterval(() => {
+                 if(scenes[4] && scenes[4].classList.contains('active')) { // 只在第四幕才發射
+                    fireworks.push(new Firework());
+                 }
+            }, 500);
+            animateFireworks();
+        }
+
+        function Firework() {
+            this.x = Math.random() * (fireworksCanvas.width || 0);
+            this.y = fireworksCanvas.height || 0;
+            this.sx = Math.random() * 3 - 1.5;
+            this.sy = Math.random() * -3 - 3;
+            this.size = Math.random() * 2 + 1;
+            this.exploded = false;
+            this.particles = [];
+            this.color = `hsl(${Math.random() * 360}, 100%, 70%)`;
+
+            const targetY = Math.random() * ((fireworksCanvas.height || 0) / 2);
+
+            this.update = function() {
+                if (!this.exploded) {
+                    this.x += this.sx;
+                    this.y += this.sy;
+                    if (this.y < targetY) {
+                        this.exploded = true;
+                        for (let i = 0; i < 50; i++) {
+                            this.particles.push(new Particle(this.x, this.y, this.color));
+                        }
+                    }
+                }
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    this.particles[i].update();
+                    if (this.particles[i].alpha <= 0) {
+                        this.particles.splice(i, 1);
+                    }
+                }
+            };
+            this.draw = function() {
+                if (!ctx) return;
+                if (!this.exploded) {
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                for (let i = 0; i < this.particles.length; i++) {
+                    this.particles[i].draw();
+                }
+            };
+        }
+
+        function Particle(x, y, color) {
+            this.x = x;
+            this.y = y;
+            this.angle = Math.random() * Math.PI * 2;
+            this.speed = Math.random() * 4 + 1;
+            this.friction = 0.95;
+            this.gravity = 0.1;
+            this.alpha = 1;
+            this.decay = Math.random() * 0.03 + 0.01;
+            this.color = color;
+
+            this.update = function() {
+                this.speed *= this.friction;
+                this.x += Math.cos(this.angle) * this.speed;
+                this.y += Math.sin(this.angle) * this.speed + this.gravity;
+                this.alpha -= this.decay;
+            };
+            this.draw = function() {
+                if (!ctx) return;
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 1, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            };
+        }
+
+        function animateFireworks() {
+            if (!ctx || !fireworksCanvas) return;
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, fireworksCanvas.width, fireworksCanvas.height);
+            for (let i = fireworks.length - 1; i >= 0; i--) {
+                fireworks[i].update();
+                fireworks[i].draw();
+                if (fireworks[i].exploded && fireworks[i].particles.length === 0) {
+                    fireworks.splice(i, 1);
+                }
+            }
+            requestAnimationFrame(animateFireworks);
+        }
+        
+    });
+    </script>
+</body>
+</html>
