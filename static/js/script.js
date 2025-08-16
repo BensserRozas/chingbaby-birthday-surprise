@@ -999,7 +999,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (e) {
                 console.log('音效錯誤:', e);
             }
-            showDialogue('生日快樂！還要請妳多多指教', 5000);
+            showDialogue('生日快樂！還要請妳再多多指教ouob', 5000);
         });
         
         // 測試hover效果
@@ -1027,4 +1027,351 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('圖片載入失敗:', this.src);
         });
     });
+
+    // --- 泡泡紙遊戲邏輯 ---
+    const goToBubbleGameBtn = document.getElementById('go-to-bubble-game');
+    const bubbleWrapButton = document.getElementById('bubble-wrap-button');
+    const resetBubblesBtn = document.getElementById('reset-bubbles');
+    const backToBirthdayBtn = document.getElementById('back-to-birthday');
+    const bubbleWrapGrid = document.getElementById('bubble-wrap-grid');
+    const poppedCountSpan = document.getElementById('popped-count');
+    const totalBubblesSpan = document.getElementById('total-bubbles');
+    
+    let poppedCount = 0;
+    const totalBubbles = 100;
+    let bubbles = [];
+    let comboCount = 0;
+    let lastPopTime = 0;
+
+    // 初始化泡泡紙遊戲
+    function initBubbleWrapGame() {
+        // 清空網格
+        bubbleWrapGrid.innerHTML = '';
+        poppedCount = 0;
+        bubbles = [];
+        
+        // 創建 10x10 的泡泡網格
+        for (let i = 0; i < totalBubbles; i++) {
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            bubble.dataset.index = i;
+            
+            // 添加點擊事件
+            bubble.addEventListener('click', () => popBubble(bubble));
+            
+            bubbleWrapGrid.appendChild(bubble);
+            bubbles.push(bubble);
+        }
+        
+        updateStats();
+    }
+
+    // 戳破泡泡
+    function popBubble(bubble) {
+        if (bubble.classList.contains('popped')) return;
+        
+        // 添加戳破效果
+        bubble.classList.add('popped');
+        poppedCount++;
+        
+        // 播放多樣化戳破音效
+        playBubblePopSound();
+        
+        // 創建戳破粒子效果
+        createPopParticles(bubble);
+        
+        // 添加愛心出現的延遲效果
+        setTimeout(() => {
+            bubble.style.background = 'radial-gradient(circle at 30% 30%, #ff69b4, #ff1493, #c71585)';
+            bubble.style.borderColor = '#c71585';
+        }, 200);
+        
+        // 更新統計
+        updateStats();
+        
+        // 檢查是否全部戳破
+        if (poppedCount === totalBubbles) {
+            setTimeout(() => {
+                showDialogue('🎉 恭喜！你戳破了所有泡泡！', 3000);
+                playVictorySound();
+            }, 500);
+        }
+    }
+
+    // 統一戳破音效
+    function playBubblePopSound() {
+        try {
+            // 檢查連擊
+            const currentTime = Date.now();
+            if (currentTime - lastPopTime < 1000) { // 1秒內連續戳破
+                comboCount++;
+                if (comboCount >= 3) {
+                    playComboSound();
+                }
+            } else {
+                comboCount = 1;
+            }
+            lastPopTime = currentTime;
+            
+            // 統一的泡泡戳破音效
+            const freq = 200 + Math.random() * 300;
+            playTone(freq, 0.2, 'sine');
+        } catch (e) {
+            console.log('音效錯誤:', e);
+        }
+    }
+
+    // 連擊音效
+    function playComboSound() {
+        try {
+            const comboNotes = [
+                { freq: 800, duration: 0.15, type: 'sine' },
+                { freq: 1000, duration: 0.15, type: 'sine' },
+                { freq: 1200, duration: 0.3, type: 'sine' }
+            ];
+            
+            comboNotes.forEach((note, index) => {
+                setTimeout(() => {
+                    playTone(note.freq, note.duration, note.type, 0.5);
+                }, index * 100);
+            });
+            
+            // 顯示連擊提示
+            showComboMessage();
+        } catch (e) {
+            console.log('連擊音效錯誤:', e);
+        }
+    }
+
+    // 顯示連擊訊息
+    function showComboMessage() {
+        const comboMsg = document.createElement('div');
+        comboMsg.className = 'combo-message';
+        comboMsg.textContent = `🔥 ${comboCount} 連擊！`;
+        comboMsg.style.cssText = `
+            position: absolute;
+            top: 50%;
+            right: 30px;
+            transform: translateY(-50%);
+            color: #ffd700;
+            font-size: 2em;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            pointer-events: none;
+        `;
+        
+        document.getElementById('scene-5').appendChild(comboMsg);
+        
+        // 動畫效果
+        comboMsg.animate([
+            { transform: 'translateY(-50%) scale(0.5)', opacity: 0 },
+            { transform: 'translateY(-50%) scale(1.2)', opacity: 1 },
+            { transform: 'translateY(-50%) scale(1)', opacity: 1 },
+            { transform: 'translateY(-50%) scale(1.1)', opacity: 0 }
+        ], {
+            duration: 1500,
+            easing: 'ease-out'
+        }).onfinish = () => {
+            comboMsg.remove();
+        };
+    }
+
+    // 勝利音效
+    function playVictorySound() {
+        try {
+            // 主旋律
+            const melody = [
+                { note: 'C5', duration: 0.3, type: 'sine' },
+                { note: 'E5', duration: 0.3, type: 'sine' },
+                { note: 'G5', duration: 0.3, type: 'sine' },
+                { note: 'C6', duration: 0.6, type: 'sine' }
+            ];
+            
+            melody.forEach((note, index) => {
+                setTimeout(() => {
+                    const freq = getNoteFrequency(note.note);
+                    playTone(freq, note.duration, note.type, 0.6);
+                }, index * 300);
+            });
+            
+            // 和弦伴奏
+            setTimeout(() => {
+                const chordFreqs = [getNoteFrequency('C4'), getNoteFrequency('E4'), getNoteFrequency('G4')];
+                chordFreqs.forEach(freq => {
+                    playTone(freq, 1.2, 'triangle', 0.3);
+                });
+            }, 300);
+            
+        } catch (e) {
+            console.log('勝利音效錯誤:', e);
+        }
+    }
+
+    // 創建戳破粒子效果
+    function createPopParticles(bubble) {
+        const rect = bubble.getBoundingClientRect();
+        const container = document.getElementById('scene-5');
+        
+        // 創建愛心形狀的粒子
+        for (let i = 0; i < 8; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'pop-particle';
+            
+            // 隨機選擇愛心或圓形粒子
+            const isHeart = Math.random() > 0.5;
+            particle.innerHTML = isHeart ? '❤️' : '✨';
+            particle.style.cssText = `
+                position: absolute;
+                font-size: ${isHeart ? '12px' : '14px'};
+                color: ${isHeart ? '#ff69b4' : '#ffd700'};
+                pointer-events: none;
+                z-index: 1000;
+                left: ${rect.left + rect.width / 2}px;
+                top: ${rect.top + rect.height / 2}px;
+                text-shadow: 0 0 8px ${isHeart ? 'rgba(255, 105, 180, 0.8)' : 'rgba(255, 215, 0, 0.8)'};
+            `;
+            
+            container.appendChild(particle);
+            
+            // 隨機方向動畫
+            const angle = (Math.PI * 2 * i) / 8;
+            const distance = 25 + Math.random() * 25;
+            const endX = rect.left + rect.width / 2 + Math.cos(angle) * distance;
+            const endY = rect.top + rect.height / 2 + Math.sin(angle) * distance;
+            
+            particle.animate([
+                { 
+                    transform: 'scale(0.5) rotate(0deg)',
+                    opacity: 0
+                },
+                { 
+                    transform: 'scale(1.2) rotate(180deg)',
+                    opacity: 1
+                },
+                { 
+                    transform: 'scale(0.8) rotate(360deg)',
+                    opacity: 0,
+                    left: endX + 'px',
+                    top: endY + 'px'
+                }
+            ], {
+                duration: 800,
+                easing: 'ease-out'
+            }).onfinish = () => {
+                particle.remove();
+            };
+        }
+    }
+
+    // 更新統計
+    function updateStats() {
+        if (poppedCountSpan) {
+            poppedCountSpan.textContent = `已戳破: ${poppedCount}`;
+        }
+        if (totalBubblesSpan) {
+            totalBubblesSpan.textContent = `總共: ${totalBubbles}`;
+        }
+    }
+
+    // 從 IMG_3.png 頁面跳轉到泡泡紙遊戲
+    if (goToBubbleGameBtn) {
+        goToBubbleGameBtn.addEventListener('click', () => {
+            console.log('從愛心泡泡紙頁面跳轉到泡泡紙遊戲');
+            try {
+                playTone(600, 0.3);
+            } catch (e) {
+                console.log('音效錯誤:', e);
+            }
+            
+            // 切換到泡泡紙遊戲場景
+            const scenes = document.querySelectorAll('.scene');
+            scenes.forEach(scene => scene.classList.remove('active'));
+            
+            const scene5 = document.getElementById('scene-5');
+            if (scene5) {
+                scene5.classList.add('active');
+                console.log('泡泡紙遊戲場景已啟動');
+                
+                // 初始化遊戲
+                setTimeout(() => {
+                    initBubbleWrapGame();
+                }, 100);
+            }
+        });
+    }
+
+    // 泡泡紙遊戲按鈕事件（保留原本功能）
+    if (bubbleWrapButton) {
+        bubbleWrapButton.addEventListener('click', () => {
+            console.log('泡泡紙遊戲按鈕被點擊');
+            try {
+                playTone(600, 0.3);
+            } catch (e) {
+                console.log('音效錯誤:', e);
+            }
+            
+            // 切換到泡泡紙遊戲場景
+            const scenes = document.querySelectorAll('.scene');
+            scenes.forEach(scene => scene.classList.remove('active'));
+            
+            const scene5 = document.getElementById('scene-5');
+            if (scene5) {
+                scene5.classList.add('active');
+                console.log('泡泡紙遊戲場景已啟動');
+                
+                // 初始化遊戲
+                setTimeout(() => {
+                    initBubbleWrapGame();
+                }, 100);
+            }
+        });
+    }
+
+    // 重新開始按鈕
+    if (resetBubblesBtn) {
+        resetBubblesBtn.addEventListener('click', () => {
+            console.log('重新開始泡泡紙遊戲');
+            playButtonSound('reset');
+            initBubbleWrapGame();
+        });
+    }
+
+    // 統一按鈕音效
+    function playButtonSound(type) {
+        try {
+            // 所有按鈕都使用相同的音效
+            playTone(800, 0.3, 'sine', 0.4);
+        } catch (e) {
+            console.log('按鈕音效錯誤:', e);
+        }
+    }
+
+        // 回到生日派對按鈕
+    if (backToBirthdayBtn) {
+        backToBirthdayBtn.addEventListener('click', () => {
+            console.log('回到愛心泡泡紙頁面');
+            playButtonSound('back');
+            
+            // 切換回回憶旅程場景（IMG_3 愛心泡泡紙頁面）
+            const scenes = document.querySelectorAll('.scene');
+            scenes.forEach(scene => scene.classList.remove('active'));
+            
+            const scene3 = document.getElementById('scene-3');
+            if (scene3) {
+                scene3.classList.add('active');
+                console.log('回憶旅程場景已啟動');
+                
+                // 確保顯示愛心泡泡紙頁面（IMG_3）
+                const memoryPages = document.querySelectorAll('.memory-page');
+                memoryPages.forEach(page => page.classList.remove('active'));
+                
+                const memoryImg3 = document.getElementById('memory-img3');
+                if (memoryImg3) {
+                    memoryImg3.classList.add('active');
+                    console.log('愛心泡泡紙頁面已顯示');
+                }
+            }
+        });
+    }
 });
